@@ -1,0 +1,44 @@
+name: Checkov Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  checkov:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Configurar el Repositorio
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Paso 2: Instalar Python y Checkov
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Checkov
+        run: |
+          python -m pip install --upgrade pip
+          pip install checkov
+
+      # Paso 3: Ejecutar Checkov
+      - name: Run Checkov on Terraform
+        run: checkov -d . --output json > checkov-report.json
+
+      # Paso 4: Publicar los Resultados
+      - name: Upload Checkov Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: checkov-report
+          path: checkov-report.json
+
+      # Paso 5: Mostrar Resultados en Consola
+      - name: Display Checkov Results
+        run: |
+          echo "Checkov Analysis Complete"
+          cat checkov-report.json
