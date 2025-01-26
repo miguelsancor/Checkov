@@ -11,38 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Clonar el repositorio
+      # Paso 1: Checkout del Repositorio
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Paso 2: Listar Archivos para Confirmar
-      - name: List Files in Directory
-        run: ls -R
-
-      # Paso 3: Validar la Configuración Terraform
-      - name: Validate Terraform Configuration
-        run: terraform validate || echo "Terraform validation failed"
-
-      # Paso 4: Instalar Checkov
+      # Paso 2: Instalar Checkov
       - name: Install Checkov
         run: |
           python -m pip install --upgrade pip
           pip install checkov
 
-      # Paso 5: Ejecutar Checkov
+      # Paso 3: Ejecutar Checkov
       - name: Run Checkov on Terraform
         run: |
-          checkov -d . --output json > checkov-report.json || true
+          checkov -d . --output json > checkov-report.json
 
-      # Paso 6: Subir el Informe
-      - name: Upload Checkov Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: checkov-report
-          path: checkov-report.json
-
-      # Paso 7: Mostrar Resultados
-      - name: Display Checkov Results
+      # Paso 4: Subir el JSON al Repositorio
+      - name: Commit and Push Report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Checkov Analysis Complete"
-          cat checkov-report.json
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Mover el archivo JSON a un directorio específico
+          mkdir -p reports
+          mv checkov-report.json reports/
+
+          # Commit y Push
+          git add reports/checkov-report.json
+          git commit -m "Update Checkov report"
+          git push origin main
