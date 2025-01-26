@@ -1,4 +1,4 @@
-name: Checkov Analysis with JSON Upload
+name: Checkov Analysis with Report Upload
 
 on:
   push:
@@ -11,33 +11,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Paso 1: Checkout del Repositorio
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # Paso 2: Instalar Checkov
       - name: Install Checkov
         run: |
           python -m pip install --upgrade pip
           pip install checkov
 
+      # Paso 3: Ejecutar Checkov
       - name: Run Checkov on Terraform
         run: |
-          checkov -d . --output json > checkov-report.json
+          checkov -d . --output json > checkov-report.json || true
 
+      # Paso 4: Commit y Push del Informe JSON
       - name: Commit and Push Report
         env:
-         REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        
-            # Cambiar a la rama 'reports'
-            git checkout reports
-        
-            # Crear carpeta 'reports' y mover el archivo JSON
-            mkdir -p reports
-            mv checkov-report.json reports/
-        
-            # Agregar y commitear los cambios
-            git add reports/checkov-report.json
-            git commit -m "Update Checkov report"
-            git push origin reports --force
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Cambiar a la rama 'reports'
+          git checkout reports || git checkout -b reports
+
+          # Crear carpeta 'reports' y mover el archivo JSON
+          mkdir -p reports
+          mv checkov-report.json reports/
+
+          # Agregar y commitear los cambios
+          git add reports/checkov-report.json
+          git commit -m "Update Checkov report"
+          git push origin reports --force
