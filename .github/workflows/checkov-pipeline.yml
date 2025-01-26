@@ -25,16 +25,19 @@ jobs:
 
       - name: Commit and Push Report
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Mover archivo al directorio 'reports'
-          mkdir -p reports
-          mv checkov-report.json reports/
-
-          # Commit y Push
-          git add reports/checkov-report.json
-          git commit -m "Update Checkov report"
-          git push origin main --force
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+            # Cambiar a la rama 'reports'
+            git checkout reports
+        
+            # Crear carpeta 'reports' y mover el archivo JSON
+            mkdir -p reports
+            mv checkov-report.json reports/
+        
+            # Agregar y commitear los cambios
+            git add reports/checkov-report.json
+            git commit -m "Update Checkov report"
+            git push origin reports --force
